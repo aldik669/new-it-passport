@@ -224,10 +224,6 @@ function renderResult() {
           <div class="passport-label">Возраст</div>
           <div class="passport-value">${formatAge(state.ageGroup)}</div>
         </div>
-        <div class="passport-item">
-          <div class="passport-label">Общий балл</div>
-          <div class="passport-value">${totalScore} / 21</div>
-        </div>
       </div>
       <div class="passport-level">
         <div class="level-badge">${scoreLevel.level}</div>
