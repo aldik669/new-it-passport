@@ -25,31 +25,9 @@ function updateLeadStatus(id, status) {
 }
 
 function exportCsv(rows) {
-  const header = [
-    "date",
-    "childName",
-    "ageGroup",
-    "parentName",
-    "parentPhone",
-    "topProfile",
-    "top3",
-    "totalScore",
-    "accuracy",
-    "leadStatus"
-  ];
+  const header = ["date", "childName", "childAge", "parentName", "parentPhone", "scoreLevel", "totalScore", "direction", "leadStatus"];
   const lines = rows.map((r) =>
-    [
-      r.createdAt,
-      r.childName,
-      r.ageGroup,
-      r.parentName,
-      r.parentPhone,
-      r.topProfile,
-      (r.top3Profiles || []).join("|"),
-      r.totalScore,
-      r.accuracy,
-      r.leadStatus
-    ]
+    [r.createdAt, r.childName, r.childAge, r.parentName, r.parentPhone, r.scoreLevel, r.totalScore, r.direction, r.leadStatus]
       .map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`)
       .join(",")
   );
@@ -69,33 +47,26 @@ function initAdmin() {
   const loginBtn = document.getElementById("admin-login-btn");
   const err = document.getElementById("admin-error");
   const search = document.getElementById("admin-search");
-  const filter = document.getElementById("admin-filter");
   const exportBtn = document.getElementById("admin-export");
   const tbody = document.querySelector("#admin-table tbody");
 
   function render() {
     const q = search.value.trim().toLowerCase();
-    const pf = filter.value;
     const rows = loadResults().filter((r) => {
-      const text =
-        !q ||
-        r.childName.toLowerCase().includes(q) ||
-        r.parentName.toLowerCase().includes(q) ||
-        r.parentPhone.toLowerCase().includes(q);
-      const prof = pf === "all" || r.topProfile === pf;
-      return text && prof;
+      return !q
+        || (r.childName || "").toLowerCase().includes(q)
+        || (r.parentName || "").toLowerCase().includes(q)
+        || (r.parentPhone || "").toLowerCase().includes(q);
     });
 
-    tbody.innerHTML = rows
-      .map(
-        (r) => `
+    tbody.innerHTML = rows.map((r) => `
       <tr>
         <td>${new Date(r.createdAt).toLocaleString("ru-RU")}</td>
-        <td>${r.childName}</td>
-        <td>${r.ageGroup}</td>
-        <td>${r.parentName}</td>
-        <td>${r.parentPhone}</td>
-        <td>${r.topProfile}</td>
+        <td>${r.childName || "—"}</td>
+        <td>${r.childAge || "—"}</td>
+        <td>${r.parentName || "—"}</td>
+        <td>${r.parentPhone || "—"}</td>
+        <td>${r.scoreLevel || "—"}</td>
         <td>${r.totalScore ?? "—"}</td>
         <td>
           <select data-id="${r.id}" class="lead-select">
@@ -105,8 +76,7 @@ function initAdmin() {
           </select>
         </td>
       </tr>`
-      )
-      .join("");
+    ).join("");
 
     tbody.querySelectorAll(".lead-select").forEach((sel) => {
       sel.addEventListener("change", (e) => {
@@ -128,7 +98,6 @@ function initAdmin() {
   });
 
   search.addEventListener("input", render);
-  filter.addEventListener("change", render);
   exportBtn.addEventListener("click", () => exportCsv(loadResults()));
 
   if (location.hash === "#admin") {

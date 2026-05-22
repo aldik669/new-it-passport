@@ -974,6 +974,7 @@ body {
   background: #fff;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  overflow: hidden;
 }
 
 .blur-section h3 {
@@ -1224,3 +1225,135 @@ body {
       margin-top: 0;
     }
   }
+
+/* ==============================
+   PASSPORT RESULT CARD
+   ============================== */
+
+.result-card--passport {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, #eaf4ff, #fff);
+  border: 1px solid rgba(0, 123, 255, 0.15);
+}
+
+.passport-row {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.passport-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.passport-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-gray);
+  font-weight: 600;
+}
+
+.passport-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.passport-level {
+  display: flex;
+}
+
+.level-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: var(--orange-grad);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
+  box-shadow: 0 4px 16px rgba(255, 122, 0, 0.3);
+}
+
+/* Description card */
+.result-card--desc {
+  grid-column: 1 / -1;
+}
+
+.result-desc-text {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+/* Full-width overrides for new result cards */
+.result-card--strengths,
+.result-card--growth {
+  grid-column: 1 / -1;
+}
+
+/* Next steps block */
+.next-steps-block {
+  text-align: center;
+  margin: 32px 0;
+  padding: 36px 32px;
+  background: var(--blue-light);
+  border-radius: var(--radius);
+  border: 1px solid rgba(0, 123, 255, 0.15);
+}
+
+.next-steps-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+}
+
+.next-steps-title {
+  margin: 0 0 12px;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.next-steps-text {
+  margin: 0 auto;
+  max-width: 480px;
+  color: var(--text-gray);
+  line-height: 1.65;
+  font-size: 1rem;
+}
+
+/* Save status */
+.save-status {
+  display: block;
+  text-align: center;
+  font-size: 0.9rem;
+  padding: 8px 0;
+  min-height: 1.4em;
+  margin-bottom: 4px;
+}
+
+.save-status--ok {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.save-status--err {
+  color: var(--text-gray);
+}
+
+@media (max-width: 640px) {
+  .passport-row {
+    gap: 20px;
+  }
+
+  .passport-value {
+    font-size: 1.3rem;
+  }
+
+  .cta-block {
+    padding: 24px 20px;
+  }
+}

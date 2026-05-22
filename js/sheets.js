@@ -1,90 +1,60 @@
-const SHEETS_ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbwLSurp2Qeby7IuoBkShClFl0ddpRj4pufQr5BVXKhJ1YHpG_DFvmzu6Yloc9bvY2U8/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxJN00c20lrVaYRDkPTJVYMDDBwiZ835SBLa0m1H3INoWy5Q5K1Vv-airLXWgIYsQer/exec";
+const SESSION_ID_KEY = "kursor-session-id";
 
-const LEAD_ID_KEY = "kursor-lead-id";
-
-const PROFESSION_RU = {
-  visual: "Creative Developer / визуальное программирование",
-  game: "Game Developer / разработка игр",
-  web: "Frontend Developer / веб-разработка",
-  logic: "Python / Software Developer / логика"
-};
-
-function professionLabel(profileKey) {
-  return PROFESSION_RU[profileKey] || PROFILE_LABELS?.[profileKey]?.title || profileKey || "";
-}
-
-function getOrCreateLeadId() {
-  let id = localStorage.getItem(LEAD_ID_KEY);
+function getOrCreateSessionId() {
+  let id = localStorage.getItem(SESSION_ID_KEY);
   if (!id) {
-    id =
-      typeof crypto !== "undefined" && crypto.randomUUID
-        ? crypto.randomUUID()
-        : "lead-" + Date.now() + "-" + Math.random().toString(36).slice(2, 9);
-    localStorage.setItem(LEAD_ID_KEY, id);
+    id = Date.now().toString() + "_" + Math.random().toString(36).slice(2);
+    localStorage.setItem(SESSION_ID_KEY, id);
   }
   return id;
 }
 
-function postToSheets(data) {
-  const body = new URLSearchParams();
-  Object.entries(data).forEach(([key, value]) => {
-    body.append(key, value == null ? "" : String(value));
-  });
-
-  fetch(SHEETS_ENDPOINT, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: body.toString()
-  }).catch(() => {});
+function clearSessionId() {
+  localStorage.removeItem(SESSION_ID_KEY);
 }
 
-function sheetsCreateLead({ childName, parentName, parentPhone }) {
-  const leadId = getOrCreateLeadId();
-  postToSheets({
-    action: "create",
-    leadId,
-    childName,
-    parentName,
-    parentPhone,
-    testPassed: "Нет",
-    miniGamesPassed: "Нет",
-    profession: ""
-  });
-  return leadId;
+// alias — app.js вызывает clearLeadId при сбросе
+function clearLeadId() {
+  clearSessionId();
 }
 
-function sheetsUpdateLead(fields) {
-  const leadId = getOrCreateLeadId();
-  postToSheets({
-    action: "update",
-    leadId,
-    ...fields
-  });
-}
-
-function sheetsMarkTestPassed(professionKey) {
-  sheetsUpdateLead({
-    testPassed: "Да",
-    profession: professionLabel(professionKey)
-  });
-}
-
-function sheetsMarkMiniGamesPassed() {
-  sheetsUpdateLead({
-    miniGamesPassed: "Да"
-  });
-}
-
-function sheetsSaveContacts({ childName, parentName, parentPhone }) {
-  if (localStorage.getItem(LEAD_ID_KEY)) {
-    sheetsUpdateLead({ childName, parentName, parentPhone });
-  } else {
-    sheetsCreateLead({ childName, parentName, parentPhone });
+async function sendLeadToGoogleSheets(payload) {
+  try {
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    console.log("Sent to Sheets:", payload);
+    return true;
+  } catch (err) {
+    console.error("Sheets error:", err);
+    return false;
   }
 }
 
-function clearLeadId() {
-  localStorage.removeItem(LEAD_ID_KEY);
+function sendInitialLead({ parentName, parentPhone, childName }) {
+  const sessionId = getOrCreateSessionId();
+  sendLeadToGoogleSheets({
+    sessionId,
+    parentName,
+    parentPhone,
+    childName,
+    testCompleted: "Нет",
+    profession: ""
+  });
+}
+
+function sendCompletedLead({ parentName, parentPhone, childName, profession }) {
+  const sessionId = getOrCreateSessionId(); // тот же id из localStorage
+  return sendLeadToGoogleSheets({
+    sessionId,
+    parentName,
+    parentPhone,
+    childName,
+    testCompleted: "Да",
+    profession
+  });
 }

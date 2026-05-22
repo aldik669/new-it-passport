@@ -1,124 +1,128 @@
-const PROFILE_LABELS = {
-  visual: { title: "Creative / Visual", track: "Визуальное программирование и дизайн" },
-  game: { title: "Game Developer", track: "Разработка игр" },
-  web: { title: "Web / Frontend", track: "Веб и интерфейсы" },
-  logic: { title: "Software / Logic", track: "Логика и алгоритмы" }
-};
+const SCORE_LEVELS = [
+  {
+    min: 18, max: 21,
+    level: "Выраженный IT-талант",
+    description: "У ребёнка выраженный цифровой талант. Самостоятельность, амбиции и тяга к технологиям — это сильные сигналы, что IT может стать его настоящим направлением. Этот потенциал важно вовремя раскрыть и направить в правильное русло.",
+    direction: "Программирование / разработка"
+  },
+  {
+    min: 13, max: 17,
+    level: "Сильный цифровой потенциал",
+    description: "Ребёнок проявляет уверенные признаки цифрового таланта — высокую вовлечённость, амбиции и интерес к тому, как устроены технологии. Есть сильные стороны, которые при правильном векторе могут вырасти в серьёзные навыки.",
+    direction: "IT-разработка / технологии"
+  },
+  {
+    min: 7, max: 12,
+    level: "Цифровой потенциал есть",
+    description: "У ребёнка есть реальный цифровой потенциал. Он проявляет амбиции и природное любопытство к технологиям — это хорошая база. Важно дать правильный вектор, чтобы этот талант начал раскрываться.",
+    direction: "IT-направления"
+  },
+  {
+    min: 0, max: 6,
+    level: "Потенциал в стадии раскрытия",
+    description: "Явные сигналы таланта пока не очевидны — но это не финальный ответ. Каждый ребёнок раскрывается по-своему и в своё время. Главное — дать правильный первый шаг.",
+    direction: "Знакомство с IT"
+  }
+];
 
-function emptyScores() {
-  return { visual: 0, game: 0, web: 0, logic: 0 };
-}
+function buildStrengths(answers) {
+  const candidates = [];
 
-function sortProfiles(scores) {
-  return Object.keys(scores).sort((a, b) => scores[b] - scores[a] || a.localeCompare(b));
-}
+  // Q1: high screen time → digital engagement
+  if (answers[0] === 0 || answers[0] === 1) {
+    candidates.push("высокий интерес к цифровой среде");
+  }
+  if (answers[0] === 0) {
+    candidates.push("быстро вовлекается в игры и технологии");
+  }
 
-function applyGameInfluence(questionScores, memory, color, route) {
-  const s = { ...questionScores };
+  // Q2: troubleshoots tech → self-sufficiency
+  if (answers[1] === 0) {
+    candidates.push("самостоятельность в разборе задач");
+    candidates.push("интерес к устройству техники");
+  } else if (answers[1] === 1) {
+    candidates.push("интерес к устройству техники");
+  }
 
-  if (memory.accuracy >= 80) s.logic += 1;
-  if (memory.accuracy >= 85 && memory.averageResponseTime <= 3500) s.game += 1;
-  if (memory.completedLevels >= 4) s.visual += 1;
-  if (memory.correctionsCount <= 2 && memory.accuracy >= 75) s.web += 1;
+  // Q4: creates content
+  if (answers[3] === 0) {
+    candidates.push("первые попытки создавать цифровой контент");
+    candidates.push("интерес к созданию, а не только потреблению");
+  } else if (answers[3] === 1) {
+    candidates.push("интерес к созданию, а не только потреблению");
+  }
 
-  if (color.colorAccuracy >= 80) s.logic += 1;
-  if (color.averageReactionTime <= 1200 && color.colorAccuracy >= 70) s.game += 1;
-  if (color.impulseErrors <= 2) s.web += 1;
-  if (color.colorAccuracy >= 75) s.visual += 1;
+  // Q5: logic/puzzles
+  if (answers[4] === 0 || answers[4] === 1) {
+    candidates.push("логическое мышление");
+  }
 
-  if (route.routeEfficiency >= 85) s.logic += 1;
-  if (route.timeToStart <= 3000 && route.routeEfficiency >= 70) s.game += 1;
-  if (route.wallHits === 0 && route.wrongDoorAttempts === 0) s.web += 1;
-  if (route.extraCommands <= 2) s.visual += 1;
+  // Q6: explains tech → tech leadership
+  if ((answers[5] === 0 || answers[5] === 1) && !candidates.includes("самостоятельность в разборе задач")) {
+    candidates.push("самостоятельность в разборе задач");
+  }
 
-  return s;
-}
-
-function buildStrengths(memory, color, route, topProfiles) {
-  const list = [];
-  if (memory.accuracy >= 75) list.push("хорошо запоминает визуальные patterns");
-  if (color.colorAccuracy >= 70) list.push("умеет быстро реагировать");
-  if (route.routeEfficiency >= 70) list.push("хорошо понимает последовательность действий");
-  if (topProfiles.includes("game")) list.push("проявляет интерес к игровым задачам");
-  if (topProfiles.includes("web")) list.push("аккуратно выбирает решения");
-  if (topProfiles.includes("visual")) list.push("внимательно воспринимает визуальные детали");
-
+  const unique = [...new Set(candidates)];
   const defaults = [
-    "любознательность в IT-задачах",
-    "готовность пробовать новые форматы",
-    "позитивный подход к обучению"
+    "высокий интерес к цифровой среде",
+    "быстро вовлекается в игры и технологии",
+    "самостоятельность в разборе задач"
   ];
-  while (list.length < 3) {
-    const d = defaults[list.length % defaults.length];
-    if (!list.includes(d)) list.push(d);
+  while (unique.length < 3) {
+    const d = defaults.find(x => !unique.includes(x));
+    if (d) unique.push(d);
+    else break;
   }
-  return list.slice(0, 3);
+  return unique.slice(0, 3);
 }
 
-function buildGrowthZones(memory, color, route) {
+function buildGrowthZones(answers) {
   const zones = [];
-  if (memory.totalMissed > 2)
-    zones.push("можно развивать внимательность к деталям");
-  if (color.impulseErrors > 2)
-    zones.push("можно тренировать устойчивость к заданиям с переключением внимания");
-  if (route.extraCommands > 3)
-    zones.push("можно усилить навык выбора короткого пути");
-  if (memory.correctionsCount > 4)
-    zones.push("можно развивать спокойное планирование перед действием");
 
-  const fallback = [
-    "можно развивать уверенность в новых цифровых задачах",
-    "можно тренировать последовательность шагов в проектах"
-  ];
-  while (zones.length < 2) {
-    const z = fallback[zones.length % fallback.length];
-    if (!zones.includes(z)) zones.push(z);
+  // Q1: high screen time → digital discipline
+  if (answers[0] === 0 || answers[0] === 1) {
+    zones.push("стоит развивать цифровую дисциплину и осознанное отношение к экранному времени");
   }
-  return zones.slice(0, 3);
+
+  // Q4: tried but quit → follow-through
+  if (answers[3] === 1) {
+    zones.push("важно работать над навыком доведения начатого до результата");
+  }
+
+  // Q4: never tried → self-initiative
+  if (answers[3] === 2 || answers[3] === 3) {
+    zones.push("стоит развивать самостоятельность в освоении новых цифровых инструментов");
+  }
+
+  // Q5: doesn't like puzzles → patience and focus
+  if (answers[4] === 2 || answers[4] === 3) {
+    zones.push("можно работать над концентрацией и усидчивостью при решении сложных задач");
+  }
+
+  const unique = [...new Set(zones)];
+  const fallback = [
+    "стоит уделить внимание цифровой этике и ответственному использованию технологий",
+    "важно работать над навыком доведения начатого до результата"
+  ];
+  while (unique.length < 2) {
+    const d = fallback.find(x => !unique.includes(x));
+    if (d) unique.push(d);
+    else break;
+  }
+  return unique.slice(0, 2);
 }
 
-function computeFinalScores(questionScores, memory, color, route) {
-  const influenced = applyGameInfluence(questionScores, memory, color, route);
-  const ranking = sortProfiles(influenced);
-  const totalScore = Object.values(influenced).reduce((a, b) => a + b, 0);
+function computeResult(answers) {
+  let totalScore = 0;
+  answers.forEach((answerIdx, qIdx) => {
+    if (answerIdx !== undefined && answerIdx !== null && PARENT_QUESTIONS[qIdx]) {
+      totalScore += PARENT_QUESTIONS[qIdx].options[answerIdx]?.score || 0;
+    }
+  });
 
-  const memoryScore = Math.min(100, Math.round(memory.accuracy * 0.7 + memory.completedLevels * 6));
-  const focusScore = Math.min(
-    100,
-    Math.round(color.colorAccuracy * 0.8 + (100 - Math.min(color.impulseErrors * 8, 40)) * 0.2)
-  );
-  const routeScore = Math.min(100, Math.round(route.routeEfficiency));
-  const accuracy = Math.round(
-    (memory.accuracy + color.colorAccuracy + route.routeEfficiency) / 3
-  );
+  const scoreLevel = SCORE_LEVELS.find(l => totalScore >= l.min && totalScore <= l.max) || SCORE_LEVELS[3];
+  const strengths = buildStrengths(answers);
+  const growthZones = buildGrowthZones(answers);
 
-  const top3 = ranking.slice(0, 3);
-  const strengths = buildStrengths(memory, color, route, top3);
-  const growthZones = buildGrowthZones(memory, color, route);
-
-  const peerPercentile = Math.min(92, Math.max(68, 55 + Math.round(accuracy * 0.35)));
-  const abstractTraits = [
-    "гибкое мышление в цифровых задачах",
-    "уверенность в новых форматах",
-    "способность удерживать внимание",
-    "интерес к исследованию и пробам",
-    "потенциал для уверенного роста в IT"
-  ];
-
-  return {
-    questionScores: influenced,
-    topProfile: ranking[0],
-    top3Profiles: top3,
-    totalScore,
-    memoryScore,
-    focusScore,
-    routeScore,
-    accuracy,
-    strengths,
-    growthZones,
-    directions: top3.map((k) => PROFILE_LABELS[k].track),
-    abstractTraits: abstractTraits.slice(0, 3),
-    peerPercentile,
-    peerLabel: "выше среднего по детям, прошедшим диагностику"
-  };
+  return { totalScore, scoreLevel, strengths, growthZones };
 }
